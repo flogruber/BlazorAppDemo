@@ -10,6 +10,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BlazorAppDemo.DB;
+using Microsoft.EntityFrameworkCore;
+using BlazorAppDemo.Interfaces;
+using BlazorAppDemo.Services;
 
 namespace BlazorAppDemo
 {
@@ -28,7 +32,12 @@ namespace BlazorAppDemo
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
+            //Adds CosmosDB DBContext
+            services.AddDbContext<productDBContext>(options => options.UseCosmos( accountEndpoint: Configuration["CosmosDB:URI"], accountKey: Configuration["CosmosDB:CS"], databaseName: Configuration["CosmosDB:Name"]));
+
             services.AddSingleton<WeatherForecastService>();
+            services.AddScoped<IProductService, ProductService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

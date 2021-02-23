@@ -1,0 +1,109 @@
+﻿@namespace BlazorAppDemo.Components.Modals
+
+@inject IProductService ProductSvc
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@ModalTitel</h5>
+                <button @onclick="() => Close()" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (Comment != null)
+                {
+                    <form>
+                        <div class="form-group">
+                            <label for="inputName">Name</label>
+                            <input @bind-value="Comment.Author" type="text" class="form-control" id="inputName" aria-describedby="Name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputDescription">Description</label>
+                            <input @bind-value="Comment.Content" type="text" class="form-control" id="inputDescription" placeholder="Enter your comment">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputDate">Date</label>
+                            <input @bind-value="Comment.Date" type="text" class="form-control" id="inputDate" placeholder="Enter date">
+                        </div>
+                    </form>
+                }
+            </div>
+            <div class="modal-footer">
+                @if (_isNewComment)
+                {
+                    <button type="button" class="btn btn-success" data-dismiss="modal" @onclick="() => AddComment()">Add Comment</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-success" data-dismiss="modal" @onclick="() => SaveComment()">Save</button>
+                }
+                <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="() => Close()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+
+    public event EventHandler ModalClose;
+
+    public Guid Guid = Guid.NewGuid();
+    public string ModalDisplay = "none;";
+    public string ModalClass = "";
+    public bool ShowBackdrop = false;
+    public string ModalTitel { get; set; }
+    public string ModalText { get; set; }
+
+    public DevProductComment Comment { get; set; }
+    public DevProduct Product { get; set; }
+
+    private bool _isNewComment = false;
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+
+        _isNewComment = false;
+        if (Comment == null)
+        {
+            Comment = new DevProductComment();
+            _isNewComment = true;
+        }
+
+        StateHasChanged();
+    }
+
+    protected async void SaveComment()
+    {
+        await ProductSvc.UpdateComment(Product.productID, Comment);
+        Close();
+    }
+
+    protected async void AddComment()
+    {
+        await ProductSvc.AddComment(Product.productID, Comment);
+        Close();
+    }
+
+    protected void Close()
+    {
+        ModalDisplay = "none";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+
+        EventHandler handler = ModalClose;
+        handler?.Invoke(this, new EventArgs());
+    }
+}

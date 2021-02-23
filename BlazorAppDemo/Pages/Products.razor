@@ -1,0 +1,104 @@
+﻿@page "/products"
+
+@inject IProductService ProductSvc
+@inject NavigationManager NavManager
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm">
+            <h3>Products</h3>
+        </div>
+        <div class="col-sm"></div>
+        <div class="col-sm">
+            <div class="float-right">
+                <button type="button" class="btn btn-success" @onclick="() => OpenProductMdl()">Add Product</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_products == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="container">
+        <div class="row table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Count</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in _products)
+                    {
+                        <tr>
+                            <th scope="row">@product.productID</th>
+                            <td>@product.Name</td>
+                            <td>@product.Amount</td>
+                            <td>
+                                <button class="btn btn-info" @onclick="@(e => NavManager.NavigateTo($"product/{product.productID}/comments"))">Comments</button>
+                                <button class="btn btn-primary" @onclick="@(e => OpenProductMdlEdit(product))">Edit</button>
+                                <button class="btn btn-danger" @onclick="@(e => DeleteProduct(product))">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+
+
+<BlazorAppDemo.Components.Modals.ProductModal @ref="_productMdl"></BlazorAppDemo.Components.Modals.ProductModal>
+
+@code {
+    private ICollection<DevProduct> _products = null;
+    private BlazorAppDemo.Components.Modals.ProductModal _productMdl { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        LoadData();
+    }
+
+    protected async void LoadData()
+    {
+        _products = await ProductSvc.GetProducts();
+    }
+
+    protected void ProductAdded(object sender, EventArgs e)
+    {
+        LoadData();
+        _productMdl.ModalClose -= ProductAdded;
+        StateHasChanged();
+    }
+
+    protected void OpenProductMdl()
+    {
+        _productMdl.ModalClose += ProductAdded;
+        _productMdl.ModalTitel = "Product";
+        _productMdl.Product = null;
+        _productMdl.Open();
+    }
+
+    protected void OpenProductMdlEdit(DevProduct product)
+    {
+        _productMdl.ModalClose += ProductAdded;
+        _productMdl.ModalTitel = "Product";
+        _productMdl.Product = product;
+        _productMdl.Open();
+    }
+
+    protected async void DeleteProduct(DevProduct product)
+    {
+        await ProductSvc.DeleteProduct(product.productID);
+        LoadData();
+        StateHasChanged();
+    }
+}

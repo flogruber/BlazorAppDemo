@@ -1,0 +1,113 @@
+﻿@namespace BlazorAppDemo.Components.Modals
+
+@inject IProductService ProductSvc
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@ModalTitel</h5>
+                <button @onclick="() => Close()" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (Product != null)
+                {
+                    <form>
+                        <div class="form-group">
+                            <label for="inputName">Name</label>
+                            <input @bind-value="Product.Name" type="text" class="form-control" id="inputName" aria-describedby="Name" placeholder="Enter name">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputDescription">Description</label>
+                            <input @bind-value="Product.Description" type="text" class="form-control" id="inputDescription" placeholder="Description">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputAmount">Description</label>
+                            <select @bind="Product.Amount" multiple class="form-control" id="inputAmount">
+                                @for (int i = 0; i < 10; i++)
+                                {
+                                    <option>@i.ToString()</option>
+                                }
+                            </select>
+                        </div>
+                    </form>
+                }
+            </div>
+            <div class="modal-footer">
+                @if (_isNewProduct)
+                {
+                    <button type="button" class="btn btn-success" data-dismiss="modal" @onclick="() => AddProduct()">Add Product</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-success" data-dismiss="modal" @onclick="() => SaveProduct()">Save</button>
+                }
+                <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="() => Close()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+
+    public event EventHandler ModalClose;
+
+    public Guid Guid = Guid.NewGuid();
+    public string ModalDisplay = "none;";
+    public string ModalClass = "";
+    public bool ShowBackdrop = false;
+    public string ModalTitel { get; set; }
+    public string ModalText { get; set; }
+
+    public DevProduct Product { get; set; }
+
+    private bool _isNewProduct = false;
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+
+        _isNewProduct = false;
+        if(Product == null)
+        {
+            Product = new DevProduct();
+            _isNewProduct = true;
+        }
+
+        StateHasChanged();
+    }
+
+    protected async void SaveProduct()
+    {
+        await ProductSvc.UpdateProduct(Product);
+        Close();
+    }
+
+    protected async void AddProduct()
+    {
+        await ProductSvc.AddProduct(Product);
+        Close();
+    }
+
+    protected void Close()
+    {
+        ModalDisplay = "none";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+
+        EventHandler handler = ModalClose;
+        handler?.Invoke(this, new EventArgs());
+    }
+}

@@ -25,15 +25,18 @@ namespace BlazorAppDemo.DB
                 .ToContainer("devProducts");
 
             modelBuilder.Entity<DevProduct>()
-                .HasKey(x => x.productID);
+                .HasPartitionKey(x => x.productID);
 
             modelBuilder.Entity<DevProduct>()
                 .OwnsMany(x => x.Comments);
+
+            //modelBuilder.Entity<DevProductComment>()
+            //    .HasKey(x => x.commentID);
 
             base.OnModelCreating(modelBuilder);
         }
 
         public DbSet<DevProduct> Products { get; set; }
-        public DbSet<DevProductComments> Comments { get; set; }
+        public DbSet<DevProductComment> Comments { get; set; }
     }
 }

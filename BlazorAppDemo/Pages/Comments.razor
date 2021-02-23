@@ -1,0 +1,37 @@
+﻿@page "/product/{productID}/comments"
+
+@inject IProductService ProductSvc
+@inject NavigationManager NavManager
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm">
+            <h3>Comments for @_product.Name</h3>
+        </div>
+        <div class="col-sm"></div>
+        <div class="col-sm">
+            <div class="float-right">
+                <button type="button" class="btn btn-secondary" @onclick="@(e => NavManager.NavigateTo("products"))">Back</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p>@productID</p>
+
+@code {
+    [Parameter]
+    public string productID { get; set; }
+
+    private DevProduct _product = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        LoadData();
+    }
+
+    protected async void LoadData()
+    {
+        _product = await ProductSvc.GetProduct(productID);
+    }
+}
