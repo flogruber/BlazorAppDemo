@@ -12,18 +12,58 @@
         <div class="col-sm">
             <div class="float-right">
                 <button type="button" class="btn btn-secondary" @onclick="@(e => NavManager.NavigateTo("products"))">Back</button>
+                @if (_product != null)
+                {
+                    <button type="button" class="btn btn-primary" @onclick="() => OpenCommentMdl()">Add Comment</button>
+                }
             </div>
         </div>
     </div>
 </div>
 
-<p>@productID</p>
+@if (_comments == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            <div class="accordion" id="accordionExample">
+                @foreach (var comment in _comments)
+                {
+                    <div class="card">
+                        <div class="card-header" id="@($"heading{comment.commentID}")">
+                            <h5 class="mb-0">
+                                <p>@comment.commentID // @comment.Author</p>
+                            </h5>
+                        </div>
+
+                        <div id="@comment.commentID" class="collapse show" aria-labelledby="@($"heading{comment.commentID}")" data-parent="#accordionExample">
+                            <div class="card-body">
+                                <h5 class="card-title">Comment</h5>
+                                <p class="card-text">@comment.Content</p>
+                                <a @onclick="() => OpenCommentMdlEdit(comment)" class="btn btn-primary">Edit comment</a>
+                                <a @onclick="() => DeleteComment(comment.commentID)" class="btn btn-danger">Delete comment</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<BlazorAppDemo.Components.Modals.CommentModal @ref="_commentMdl"></BlazorAppDemo.Components.Modals.CommentModal>
 
 @code {
     [Parameter]
     public string productID { get; set; }
 
+    public BlazorAppDemo.Components.Modals.CommentModal _commentMdl { get; set; }
+
     private DevProduct _product = null;
+    private ICollection<DevProductComment> _comments = null;
 
     protected async override Task OnInitializedAsync()
     {
@@ -33,5 +73,38 @@
     protected async void LoadData()
     {
         _product = await ProductSvc.GetProduct(productID);
+        _comments = await ProductSvc.GetComments2Product(productID);
+    }
+
+    protected void CommentAdded(object sender, EventArgs e)
+    {
+        LoadData();
+        StateHasChanged();
+        _commentMdl.ModalClose -= CommentAdded;
+    }
+
+    protected void OpenCommentMdl()
+    {
+        _commentMdl.ModalClose += CommentAdded;
+        _commentMdl.ModalTitel = "Comment";
+        _commentMdl.Product = _product;
+        _commentMdl.Comment = null;
+        _commentMdl.Open();
+    }
+
+    protected void OpenCommentMdlEdit(DevProductComment comment)
+    {
+        _commentMdl.ModalClose += CommentAdded;
+        _commentMdl.ModalTitel = "Comment";
+        _commentMdl.Product = _product;
+        _commentMdl.Comment = comment;
+        _commentMdl.Open();
+    }
+
+    protected async void DeleteComment(string commentID)
+    {
+        await ProductSvc.DeleteComment(_product.productID, commentID);
+        LoadData();
+        StateHasChanged();
     }
 }

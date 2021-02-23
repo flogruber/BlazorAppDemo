@@ -16,5 +16,6 @@ namespace BlazorAppDemo.Interfaces
         public Task<bool> AddComment(string productID, DevProductComment comment);
         public Task<bool> DeleteComment(string productID, string commentID);
         public Task UpdateComment(string productID, DevProductComment comment);
+        public Task<ICollection<DevProductComment>> GetComments2Product(string productID);
     }
 }

@@ -110,6 +110,16 @@ namespace BlazorAppDemo.Services
             await _dbContext.SaveChangesAsync();
             return true;
         }
-        #endregion  
+
+        public async Task<ICollection<DevProductComment>> GetComments2Product(string productID)
+        {
+            if (!GuidHelper.IsGuid(productID)) { return null; }
+
+            var product = _dbContext.Products.Where(x => x.productID == productID).FirstOrDefault();
+            if (product == null){ return null; }
+
+            return product.Comments;
+        }
+        #endregion
     }
 }
